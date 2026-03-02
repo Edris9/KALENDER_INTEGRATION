@@ -7,4 +7,5 @@ def create_flow():
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI
     )
+    flow.code_challenge_method = None
     return flow

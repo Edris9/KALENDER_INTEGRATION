@@ -1,7 +1,9 @@
 from flask import Flask
 from routes.auth_routes import auth_bp
 from routes.calendar_routes import calendar_bp
+import os
 
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 app = Flask(__name__)
 app.secret_key = "showcase_secret_key"
 
