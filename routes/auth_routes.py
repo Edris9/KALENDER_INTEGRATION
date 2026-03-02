@@ -10,30 +10,32 @@ auth_bp = Blueprint("auth", __name__)
 @auth_bp.route("/login")
 def login():
     flow = Flow.from_client_secrets_file(
-        CLIENT_SECRETS_FILE,
-        scopes=SCOPES,
-        redirect_uri=REDIRECT_URI
-    )
+    CLIENT_SECRETS_FILE,
+    scopes=SCOPES,
+    redirect_uri=REDIRECT_URI
+)
+
     auth_url, state = flow.authorization_url(
         access_type="offline",
-        prompt="consent",
- 
+        prompt="consent"
     )
     session["state"] = state
-    session["code_verifier"] = ""
     return redirect(auth_url)
 
 @auth_bp.route("/callback")
 def callback():
+    if "state" not in session:
+        return "Session state saknas. Gå via /login först."
+
     flow = Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE,
         scopes=SCOPES,
+        state=session["state"],
         redirect_uri=REDIRECT_URI
     )
-    flow.fetch_token(
-        authorization_response=request.url,
-        code_verifier=session.get("code_verifier", "")
-    )
+
+    flow.fetch_token(authorization_response=request.url)
+
     credentials = flow.credentials
     session["credentials"] = {
         "token": credentials.token,

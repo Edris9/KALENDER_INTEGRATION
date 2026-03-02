@@ -5,4 +5,4 @@ SCOPES = [
     "https://www.googleapis.com/auth/calendar.events"
 ]
 
-REDIRECT_URI = "http://localhost:5000/callback"
+REDIRECT_URI = "http://127.0.0.1:5000/callback"

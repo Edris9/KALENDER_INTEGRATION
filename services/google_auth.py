@@ -7,5 +7,6 @@ def create_flow():
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI
     )
-    flow.code_challenge_method = None
+    # Lägg till denna rad för att stänga av kravet på code_verifier
+    flow.code_challenge_method = None 
     return flow
