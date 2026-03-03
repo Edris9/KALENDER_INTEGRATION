@@ -10,16 +10,19 @@ auth_bp = Blueprint("auth", __name__)
 @auth_bp.route("/login")
 def login():
     flow = Flow.from_client_secrets_file(
-    CLIENT_SECRETS_FILE,
-    scopes=SCOPES,
-    redirect_uri=REDIRECT_URI
-)
-
+        CLIENT_SECRETS_FILE,
+        scopes=SCOPES,
+        redirect_uri=REDIRECT_URI
+    )
     auth_url, state = flow.authorization_url(
         access_type="offline",
-        prompt="consent"
+        prompt="consent",
     )
     session["state"] = state
+    
+    
+    session["code_verifier"] = flow.code_verifier 
+    
     return redirect(auth_url)
 
 @auth_bp.route("/callback")
@@ -30,12 +33,14 @@ def callback():
     flow = Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE,
         scopes=SCOPES,
-        state=session["state"],
         redirect_uri=REDIRECT_URI
     )
-
-    flow.fetch_token(authorization_response=request.url)
-
+    flow.fetch_token(
+        authorization_response=request.url,
+        # Kontrollera att den hämtar från sessionen
+        code_verifier=session.get("code_verifier")
+    )
+    
     credentials = flow.credentials
     session["credentials"] = {
         "token": credentials.token,

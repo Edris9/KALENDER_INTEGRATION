@@ -19,11 +19,16 @@ def get_availability(credentials):
     events = events_result.get("items", [])
     
     slots = []
+    # I services/calendar_reader.py
     for event in events:
+        # Kolla dateTime först, annars date (för heldagar)
+        start = event["start"].get("dateTime") or event["start"].get("date")
+        slut = event["end"].get("dateTime") or event["end"].get("date")
+        
         slots.append({
             "titel": event.get("summary", "Ingen titel"),
-            "start": event["start"].get("dateTime"),
-            "slut": event["end"].get("dateTime")
+            "start": start,
+            "slut": slut
         })
     
     return slots
