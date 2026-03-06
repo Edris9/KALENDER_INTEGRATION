@@ -16,8 +16,8 @@ def availability():
     free_slots = get_free_slots(events)
     
     return jsonify({
-        "upptagna_tider": events,
-        "lediga_tider": free_slots
+        "Busy_slots": events,
+        "Free_slots": free_slots
     })
 
 @calendar_bp.route("/book", methods=["POST"])
@@ -25,18 +25,19 @@ def book():
     if "credentials" not in session:
         return redirect("/login")
     
-    data = request.json
+    data = request.json 
     credentials = Credentials(**session["credentials"])
     
     link = book_meeting(
         credentials,
-        titel=data["titel"],
+        titel=data["title"],
         start_tid=data["start_tid"],
-        slut_tid=data["slut_tid"],
+        end_tid=data["slut_tid"],
+        
         deltagare_email=data["email"]
     )
     
     return jsonify({
-        "meddelande": "Möte bokat!",
-        "kalender_link": link
+        "Message": "Meeting booked!",
+        "Calendar_link": link
     })

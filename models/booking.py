@@ -4,18 +4,18 @@ from dataclasses import dataclass
 class Booking:
     titel: str
     start_tid: str
-    slut_tid: str
+    end_tid: str
     deltagare_email: str
     
     def validate(self):
         if not self.titel:
-            return "Titel saknas"
+            return "Titel missing"
         if not self.start_tid:
-            return "Starttid saknas"
-        if not self.slut_tid:
-            return "Sluttid saknas"
+            return "Starttid missing"
+        if not self.end_tid:
+            return "endtid missing"
         if not self.deltagare_email:
-            return "Email saknas"
+            return "Email missing"
         if "@" not in self.deltagare_email:
-            return "Ogiltig email"
+            return "Invalid email"
         return None

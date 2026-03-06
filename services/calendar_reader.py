@@ -6,11 +6,11 @@ def get_availability(credentials):
     
     now = datetime.now(timezone.utc)
     ten_days_later = (now + timedelta(days=10)).isoformat()
-    now = now.isoformat()
+    now_iso = now.isoformat()
     
     events_result = service.events().list(
         calendarId="primary",
-        timeMin=now,
+        timeMin=now_iso,
         timeMax=ten_days_later,
         singleEvents=True,
         orderBy="startTime"
@@ -19,16 +19,18 @@ def get_availability(credentials):
     events = events_result.get("items", [])
     
     slots = []
-    # I services/calendar_reader.py
     for event in events:
-        # Kolla dateTime först, annars date (för heldagar)
         start = event["start"].get("dateTime") or event["start"].get("date")
-        slut = event["end"].get("dateTime") or event["end"].get("date")
+        end = event["end"].get("dateTime") or event["end"].get("date")
+        
+        # Filtrera bort händelser utan tid (heldag/fleråriga)
+        if "T" not in str(start):
+            continue
         
         slots.append({
-            "titel": event.get("summary", "Ingen titel"),
-            "start": start,
-            "slut": slut
+            "titel": event.get("summary", "No title"),
+            "Start": start,
+            "End": end
         })
     
     return slots

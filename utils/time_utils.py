@@ -1,32 +1,42 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
-ARBETSDAG_START = 9   # 09:00
-ARBETSDAG_SLUT = 17   # 17:00
+WORKDAY_START = 9
+WORKDAY_END = 17
+SLOT_DURATION = 1  # timmar
+
+def split_into_slots(start, end):
+    slots = []
+    current = start
+    while current + timedelta(hours=SLOT_DURATION) <= end:
+        slots.append({
+            "Start": current.strftime("%Y-%m-%d %H:%M"),
+            "End": (current + timedelta(hours=SLOT_DURATION)).strftime("%Y-%m-%d %H:%M")
+        })
+        current += timedelta(hours=SLOT_DURATION)
+    return slots
 
 def get_free_slots(events):
-    """
-    Beräknar lediga tider baserat på upptagna händelser under en arbetsdag (09:00 - 17:00).
-    Löser felet med offset-naive och offset-aware genom att normalisera tidszoner.
-    """
     free_slots = []
+    today = datetime.now().date()
     
-    # Gruppera händelser per dag
+    all_dates = [(today + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(10)]
+    
     events_by_date = {}
     for event in events:
-        start_str = event.get("start")
-        slut_str = event.get("slut")
+        start_str = event.get("Start")
+        slut_str = event.get("End")
         
         if not start_str or not slut_str or "T" not in start_str:
             continue
             
         try:
-            # Ersätt 'Z' med UTC-offset och skapa datetime-objekt
-            start_dt = datetime.fromisoformat(start_str.replace('Z', '+00:00'))
-            slut_dt = datetime.fromisoformat(slut_str.replace('Z', '+00:00'))
+            start_dt = datetime.fromisoformat(start_str.replace('Z', '+00:00')).replace(tzinfo=None)
+            slut_dt = datetime.fromisoformat(slut_str.replace('Z', '+00:00')).replace(tzinfo=None)
             
-            # Gör objekten "naive" (ta bort tidszonsinfo) för att kunna jämföra med lokala tider
-            start_dt = start_dt.replace(tzinfo=None)
-            slut_dt = slut_dt.replace(tzinfo=None)
+            if start_dt.date() < today:
+                continue
+            if (slut_dt - start_dt).days > 1:
+                continue
             
             date_key = str(start_dt.date())
             if date_key not in events_by_date:
@@ -35,34 +45,21 @@ def get_free_slots(events):
         except (ValueError, TypeError):
             continue
 
-    for date_str, daily_events in events_by_date.items():
+    for date_str in all_dates:
+        daily_events = events_by_date.get(date_str, [])
         daily_events.sort()
         
-        # Skapa ramar för arbetsdagen (dessa är naive som standard)
         day_start = datetime.fromisoformat(f"{date_str}T09:00:00")
         day_end = datetime.fromisoformat(f"{date_str}T17:00:00")
-        
         current_time = day_start
         
         for start, slut in daily_events:
-            # Nu är både 'start' och 'current_time' naive, så jämförelsen fungerar
             if start > current_time:
-                gap_start = max(current_time, day_start)
-                gap_end = min(start, day_end)
-                
-                if gap_end > gap_start:
-                    free_slots.append({
-                        "start": gap_start.strftime("%Y-%m-%d %H:%M"),
-                        "slut": gap_end.strftime("%Y-%m-%d %H:%M")
-                    })
-            
+                free_slots.extend(split_into_slots(current_time, start))
             if slut > current_time:
                 current_time = slut
         
         if current_time < day_end:
-            free_slots.append({
-                "start": current_time.strftime("%Y-%m-%d %H:%M"),
-                "slut": day_end.strftime("%Y-%m-%d %H:%M")
-            })
+            free_slots.extend(split_into_slots(current_time, day_end))
             
     return free_slots

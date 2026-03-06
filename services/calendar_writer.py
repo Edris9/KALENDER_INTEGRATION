@@ -1,6 +1,6 @@
 from googleapiclient.discovery import build
 
-def book_meeting(credentials, titel, start_tid, slut_tid, deltagare_email):
+def book_meeting(credentials, titel, start_tid, end_tid, deltagare_email):
     service = build("calendar", "v3", credentials=credentials)
     
     event = {
@@ -10,7 +10,7 @@ def book_meeting(credentials, titel, start_tid, slut_tid, deltagare_email):
             "timeZone": "Europe/Stockholm"
         },
         "end": {
-            "dateTime": slut_tid,
+            "dateTime": end_tid,
             "timeZone": "Europe/Stockholm"
         },
         "attendees": [

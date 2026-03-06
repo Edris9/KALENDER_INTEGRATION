@@ -50,4 +50,4 @@ def callback():
         "client_secret": credentials.client_secret,
         "scopes": list(credentials.scopes)
     }
-    return redirect("/availability")
+    return redirect("/")
