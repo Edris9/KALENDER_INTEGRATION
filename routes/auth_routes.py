@@ -1,5 +1,8 @@
 import os
 import json
+import hashlib
+import base64
+import secrets
 from flask import Blueprint, redirect, session, request
 from google_auth_oauthlib.flow import Flow
 from config.settings import SCOPES, REDIRECT_URI
@@ -26,12 +29,26 @@ def create_flow():
         )
     return flow
 
+def generate_code_verifier():
+    return secrets.token_urlsafe(64)
+
+def generate_code_challenge(verifier):
+    digest = hashlib.sha256(verifier.encode()).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b'=').decode()
+
 @auth_bp.route("/login")
 def login():
     flow = create_flow()
+    
+    code_verifier = generate_code_verifier()
+    code_challenge = generate_code_challenge(code_verifier)
+    session["code_verifier"] = code_verifier
+    
     auth_url, state = flow.authorization_url(
         access_type="offline",
-        prompt="consent"
+        prompt="consent",
+        code_challenge=code_challenge,
+        code_challenge_method="S256"
     )
     session["state"] = state
     return redirect(auth_url)
@@ -39,10 +56,11 @@ def login():
 @auth_bp.route("/callback")
 def callback():
     flow = create_flow()
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+    code_verifier = session.get("code_verifier", "")
+    
     flow.fetch_token(
         authorization_response=request.url,
-        state=session["state"]
+        code_verifier=code_verifier
     )
     credentials = flow.credentials
     session["credentials"] = {
