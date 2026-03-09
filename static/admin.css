@@ -1,0 +1,147 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f5f7fa;
+    min-height: 100vh;
+}
+
+.navbar {
+    background: white;
+    padding: 16px 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+.logout-btn {
+    background: #f5f7fa;
+    color: #444;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.logout-btn:hover { background: #e8edf5; }
+
+.container {
+    padding: 32px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+h2 {
+    font-size: 16px;
+    color: #444;
+    margin-bottom: 16px;
+}
+
+.client-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border: 2px solid #e8edf5;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.client-card:hover { border-color: #4285f4; background: #f0f7ff; }
+.client-card.selected { border-color: #4285f4; background: #f0f7ff; }
+
+.client-info h3 { font-size: 15px; color: #1a1a2e; }
+.client-info p { font-size: 13px; color: #888; margin-top: 4px; }
+
+.status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status.connected { background: #e6f4ea; color: #34a853; }
+
+.view-btn {
+    background: #4285f4;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.empty {
+    text-align: center;
+    color: #888;
+    padding: 40px;
+}
+
+input {
+    width: 100%;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    border: 2px solid #e8edf5;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border 0.2s;
+}
+
+input:focus { border-color: #4285f4; }
+
+.book-btn {
+    background: #34a853;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    width: 100%;
+    font-weight: 600;
+}
+
+.book-btn:hover { background: #2d9248; }
+
+.confirmation {
+    text-align: center;
+    padding: 40px;
+}
+
+.confirmation .icon { font-size: 60px; margin-bottom: 16px; }
+.confirmation h2 { color: #34a853; margin-bottom: 8px; }
+.confirmation p { color: #888; margin-bottom: 20px; }
+
+.slot {
+    padding: 12px;
+    border: 2px solid #e8edf5;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+}
+
+.slot:hover { border-color: #4285f4; color: #4285f4; }
+.slot.selected { background: #4285f4; color: white; border-color: #4285f4; }

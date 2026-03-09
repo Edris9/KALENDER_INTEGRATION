@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Showcase Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="nav-left">
+            <span class="logo">Showcase Admin</span>
+        </div>
+        <div class="nav-right">
+            <button class="logout-btn" onclick="window.location.href='/admin/logout'">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- KLIENTLISTA -->
+        <div class="section">
+            <h2>Connected Clients</h2>
+            <div id="clients-list">
+                <div class="empty">No clients connected yet.</div>
+            </div>
+        </div>
+
+        <!-- KALENDER (visas när klient väljs) -->
+        <div class="section" id="calendar-section" style="display:none;">
+            <h2>📅 <span id="selected-client-name"></span>'s Calendar</h2>
+            <div id="admin-calendar"></div>
+        </div>
+
+        <!-- BOKNINGSFORMULÄR -->
+        <div class="section" id="admin-booking-form" style="display:none;">
+            <h2>Book a Meeting</h2>
+            <div id="admin-selected-info"></div>
+            <input type="text" id="lead-name" placeholder="Lead's full name" />
+            <input type="email" id="lead-email" placeholder="Lead's email" />
+            <button class="book-btn" onclick="adminBookMeeting()">Confirm Booking</button>
+        </div>
+
+        <!-- BEKRÄFTELSE -->
+        <div class="section confirmation" id="admin-confirmation" style="display:none;">
+            <div class="icon">🎉</div>
+            <h2>Meeting Booked!</h2>
+            <p>The calendar invite has been sent.</p>
+            <button class="book-btn" onclick="location.reload()">Book Another</button>
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='admin.js') }}"></script>
+</body>
+</html>

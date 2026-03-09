@@ -5,9 +5,17 @@ from routes.calendar_routes import calendar_bp
 from flask import render_template
 import os
 
+from routes.admin_routes import admin_bp
+
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 app = Flask(__name__)
 app.secret_key = "super_hemlig_nyckel_123"
+
+app.register_blueprint(admin_bp)
+
+app.route("/admin_login")
+def admin_login():
+    return render_template("admin_login.html")
 
 @app.route("/")
 def index():
