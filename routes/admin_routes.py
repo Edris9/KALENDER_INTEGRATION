@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, session, redirect, jsonif
 from google.oauth2.credentials import Credentials
 from services.calendar_reader import get_availability
 from services.calendar_writer import book_meeting
-from services.Supabase_Client import supabase
+from services.supabase_client import supabase
 from utils.time_utils import get_free_slots
 
 admin_bp = Blueprint("admin", __name__)
