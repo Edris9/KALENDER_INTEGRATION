@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, session, redirect, jsonif
 from google.oauth2.credentials import Credentials
 from services.calendar_reader import get_availability
 from services.calendar_writer import book_meeting
+from services.Supabase_Client import supabase
 from utils.time_utils import get_free_slots
 
 admin_bp = Blueprint("admin", __name__)
@@ -14,13 +15,11 @@ def admin_login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session["is_admin"] = True
             return redirect("/admin")
         else:
             return render_template("admin_login.html", error="Wrong username or password!")
-    
     return render_template("admin_login.html")
 
 @admin_bp.route("/admin")
@@ -34,38 +33,64 @@ def get_clients():
     if not session.get("is_admin"):
         return jsonify({"error": "Unauthorized"}), 401
     
-    # Tillfälligt — senare hämtar vi från Supabase
-    clients = []
-    if "credentials" in session:
-        clients = [{
-            "id": "current",
-            "name": "Test Client",
-            "email": "test@example.com"
-        }]
+    result = supabase.table("clients").select("id, name, email, connected_at").execute()
     
-    return jsonify({"clients": clients})
+    return jsonify({"clients": result.data})
 
 @admin_bp.route("/admin/availability/<client_id>")
 def client_availability(client_id):
     if not session.get("is_admin"):
         return jsonify({"error": "Unauthorized"}), 401
     
-    credentials = Credentials(**session["credentials"])
+    result = supabase.table("clients").select("*").eq("id", client_id).execute()
+    
+    if not result.data:
+        return jsonify({"error": "Client not found"}), 404
+    
+    client = result.data[0]
+    
+    import ast
+    scopes = ast.literal_eval(client["scopes"])
+    
+    credentials = Credentials(
+        token=client["token"],
+        refresh_token=client["refresh_token"],
+        token_uri=client["token_uri"],
+        client_id=client["client_id"],
+        client_secret=client["client_secret"],
+        scopes=scopes
+    )
+    
     events = get_availability(credentials)
     free_slots = get_free_slots(events)
     
-    return jsonify({
-        "Free_slots": free_slots
-    })
+    return jsonify({"Free_slots": free_slots})
 
 @admin_bp.route("/admin/book/<client_id>", methods=["POST"])
 def admin_book(client_id):
     if not session.get("is_admin"):
         return jsonify({"error": "Unauthorized"}), 401
     
-    data = request.json
-    credentials = Credentials(**session["credentials"])
+    result = supabase.table("clients").select("*").eq("id", client_id).execute()
     
+    if not result.data:
+        return jsonify({"error": "Client not found"}), 404
+    
+    client = result.data[0]
+    
+    import ast
+    scopes = ast.literal_eval(client["scopes"])
+    
+    credentials = Credentials(
+        token=client["token"],
+        refresh_token=client["refresh_token"],
+        token_uri=client["token_uri"],
+        client_id=client["client_id"],
+        client_secret=client["client_secret"],
+        scopes=scopes
+    )
+    
+    data = request.json
     link = book_meeting(
         credentials,
         titel=data["title"],
@@ -73,6 +98,11 @@ def admin_book(client_id):
         end_tid=data["slut_tid"],
         deltagare_email=data["email"]
     )
+    
+    # Uppdatera total_meetings
+    supabase.table("clients").update({
+        "total_meetings": client["total_meetings"] + 1
+    }).eq("id", client_id).execute()
     
     return jsonify({
         "Message": "Meeting booked!",

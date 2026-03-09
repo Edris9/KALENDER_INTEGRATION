@@ -38,6 +38,9 @@ def logout():
 # Registrera routes
 app.register_blueprint(auth_bp)
 app.register_blueprint(calendar_bp)
+app.secret_key = "showcase_secret_key"
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = False
 
 if __name__ == "__main__":
     app.run(debug=False, port=5000)

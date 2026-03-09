@@ -6,10 +6,15 @@ import secrets
 from flask import Blueprint, redirect, session, request
 from google_auth_oauthlib.flow import Flow
 from config.settings import SCOPES, REDIRECT_URI
+import requests as req
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"    
 
 auth_bp = Blueprint("auth", __name__)
+
+# In-memory storage istället för filer
+verifier_store = {}
 
 def create_flow():
     credentials_json = os.environ.get("GOOGLE_CREDENTIALS")
@@ -42,7 +47,6 @@ def login():
     
     code_verifier = generate_code_verifier()
     code_challenge = generate_code_challenge(code_verifier)
-    session["code_verifier"] = code_verifier
     
     auth_url, state = flow.authorization_url(
         access_type="offline",
@@ -50,19 +54,27 @@ def login():
         code_challenge=code_challenge,
         code_challenge_method="S256"
     )
+    
+    # Spara i minnet istället för fil
+    verifier_store[state] = code_verifier
+    
     session["state"] = state
     return redirect(auth_url)
 
 @auth_bp.route("/callback")
 def callback():
     flow = create_flow()
-    code_verifier = session.get("code_verifier", "")
+    state = request.args.get("state")
+    
+    # Hämta från minnet och radera
+    code_verifier = verifier_store.pop(state, "")
     
     flow.fetch_token(
         authorization_response=request.url,
         code_verifier=code_verifier
     )
     credentials = flow.credentials
+    
     session["credentials"] = {
         "token": credentials.token,
         "refresh_token": credentials.refresh_token,
@@ -71,6 +83,43 @@ def callback():
         "client_secret": credentials.client_secret,
         "scopes": list(credentials.scopes)
     }
+    
+    # Hämta användarens email från Google
+    
+    user_info = req.get(
+    "https://openidconnect.googleapis.com/v1/userinfo",
+    headers={"Authorization": f"Bearer {credentials.token}"}
+        ).json()
+    print("User info:", user_info)
+    email = user_info.get("email")
+    name = user_info.get("name")
+    
+    # Spara i Supabase
+    from services.Supabase_Client import supabase
+
+    existing = supabase.table("clients").select("*").eq("email", email).execute()
+    
+    if existing.data:
+        supabase.table("clients").update({
+            "token": credentials.token,
+            "refresh_token": credentials.refresh_token,
+            "token_uri": credentials.token_uri,
+            "client_id": credentials.client_id,
+            "client_secret": credentials.client_secret,
+            "scopes": str(list(credentials.scopes))
+        }).eq("email", email).execute()
+    else:
+        supabase.table("clients").insert({
+            "name": name,
+            "email": email,
+            "token": credentials.token,
+            "refresh_token": credentials.refresh_token,
+            "token_uri": credentials.token_uri,
+            "client_id": credentials.client_id,
+            "client_secret": credentials.client_secret,
+            "scopes": str(list(credentials.scopes))
+        }).execute()
+    
     return redirect("/")
 
 @auth_bp.route("/logout")
