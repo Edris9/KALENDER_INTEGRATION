@@ -123,12 +123,21 @@ function bookMeeting() {
     })
   })
   .then(r => r.json())
-  .then(() => {
-    document.getElementById('calendar-grid').style.display = 'none';
-    document.getElementById('booking-form').style.display = 'none';
-    document.getElementById('confirmation').style.display = 'block';
+  .then(data => {
+      document.getElementById('calendar-grid').style.display = 'none';
+      document.getElementById('booking-form').style.display = 'none';
+      
+      const conf = document.getElementById('confirmation');
+      conf.innerHTML = `
+          <div class="icon">🎉</div>
+          <h2>Meeting Booked!</h2>
+          <p>📅 <strong>${selectedSlot.Start} – ${selectedSlot.End.split(' ')[1]}</strong></p>
+          <p>📧 Check your email for the calendar invitation.</p>
+          ${data.Calendar_link ? `<a href="${data.Calendar_link}" target="_blank" style="color:#4285f4; display:block; margin:10px 0;">View in Google Calendar →</a>` : ''}
+          <button class="book-btn new-booking" onclick="location.reload()">Book Another Meeting</button>
+      `;
+      conf.style.display = 'block';
   })
-  .catch(() => alert('Something went wrong during booking.'));
 }
 
 // Init

@@ -97,6 +97,10 @@ function adminBookMeeting() {
         return;
     }
 
+    const btn = document.querySelector('#admin-booking-form .book-btn');
+    btn.innerText = 'Booking...';
+    btn.disabled = true;
+
     fetch(`/admin/book/${selectedClient}`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -108,10 +112,29 @@ function adminBookMeeting() {
         })
     })
     .then(r => r.json())
-    .then(() => {
+    .then(data => {
         document.getElementById('calendar-section').style.display = 'none';
         document.getElementById('admin-booking-form').style.display = 'none';
-        document.getElementById('admin-confirmation').style.display = 'block';
+
+        // Feature 1 — App status update med detaljer
+        const confirmation = document.getElementById('admin-confirmation');
+        confirmation.innerHTML = `
+            <div class="icon">🎉</div>
+            <h2>Meeting Booked!</h2>
+            <p>📅 <strong>${selectedSlot.Start} – ${selectedSlot.End.split(' ')[1]}</strong></p>
+            <p>👤 <strong>${name}</strong> (${email})</p>
+            <p>📧 Calendar invite sent to both parties.</p>
+            ${data.Calendar_link ? `<a href="${data.Calendar_link}" target="_blank" style="color:#4285f4;">View in Google Calendar →</a>` : ''}
+            <br><br>
+            <button class="book-btn" onclick="location.reload()">Book Another</button>
+        `;
+        confirmation.style.display = 'block';
+        confirmation.scrollIntoView({behavior: 'smooth'});
+    })
+    .catch(() => {
+        btn.innerText = 'Confirm Booking';
+        btn.disabled = false;
+        alert('Something went wrong!');
     });
 }
 

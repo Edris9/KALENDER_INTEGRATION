@@ -1,4 +1,5 @@
 from flask import Blueprint, session, jsonify, request, redirect
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from services.calendar_reader import get_availability
 from services.calendar_writer import book_meeting
@@ -12,6 +13,12 @@ def availability():
         return redirect("/login")
     
     credentials = Credentials(**session["credentials"])
+    
+    # Förnya om utgången
+    if credentials.expired or not credentials.valid:
+        credentials.refresh(Request())
+        session["credentials"]["token"] = credentials.token  # uppdatera session
+    
     events = get_availability(credentials)
     free_slots = get_free_slots(events)
     

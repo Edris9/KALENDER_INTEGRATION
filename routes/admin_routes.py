@@ -1,14 +1,40 @@
 from flask import Blueprint, render_template, request, session, redirect, jsonify
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from services.calendar_reader import get_availability
 from services.calendar_writer import book_meeting
 from services.supabase_client import supabase
 from utils.time_utils import get_free_slots
+from services.email_service import send_booking_confirmation_lead, send_booking_notification_admin
 
 admin_bp = Blueprint("admin", __name__)
 
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "showcase123"
+
+def refresh_credentials(client):
+    """Förnyar token automatiskt om den gått ut"""
+    import ast
+    scopes = ast.literal_eval(client["scopes"])
+    
+    credentials = Credentials(
+        token=client["token"],
+        refresh_token=client["refresh_token"],
+        token_uri=client["token_uri"],
+        client_id=client["client_id"],
+        client_secret=client["client_secret"],
+        scopes=scopes
+    )
+    
+    # Förnya om token gått ut
+    if credentials.expired or not credentials.valid:
+        credentials.refresh(Request())
+        # Spara nya token i Supabase
+        supabase.table("clients").update({
+            "token": credentials.token
+        }).eq("id", client["id"]).execute()
+    
+    return credentials
 
 @admin_bp.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
@@ -52,14 +78,7 @@ def client_availability(client_id):
     import ast
     scopes = ast.literal_eval(client["scopes"])
     
-    credentials = Credentials(
-        token=client["token"],
-        refresh_token=client["refresh_token"],
-        token_uri=client["token_uri"],
-        client_id=client["client_id"],
-        client_secret=client["client_secret"],
-        scopes=scopes
-    )
+    credentials = refresh_credentials(client)
     
     events = get_availability(credentials)
     free_slots = get_free_slots(events)
@@ -81,14 +100,7 @@ def admin_book(client_id):
     import ast
     scopes = ast.literal_eval(client["scopes"])
     
-    credentials = Credentials(
-        token=client["token"],
-        refresh_token=client["refresh_token"],
-        token_uri=client["token_uri"],
-        client_id=client["client_id"],
-        client_secret=client["client_secret"],
-        scopes=scopes
-    )
+    credentials = refresh_credentials(client)
     
     data = request.json
     link = book_meeting(
@@ -97,6 +109,26 @@ def admin_book(client_id):
         start_tid=data["start_tid"],
         end_tid=data["slut_tid"],
         deltagare_email=data["email"]
+    )
+    lead_name = data.get("title", "").replace("Meeting with ", "")
+
+    send_booking_confirmation_lead(
+        lead_email=data["email"],
+        lead_name=lead_name,
+        meeting_title=data["title"],
+        start_tid=data["start_tid"],
+        end_tid=data["slut_tid"],
+        calendar_link=link
+    )
+
+    send_booking_notification_admin(
+        lead_email=data["email"],
+        lead_name=lead_name,
+        meeting_title=data["title"],
+        start_tid=data["start_tid"],
+        end_tid=data["slut_tid"],
+        client_name=client["name"],
+        calendar_link=link
     )
     
     # Uppdatera total_meetings

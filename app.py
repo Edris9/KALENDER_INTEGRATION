@@ -4,8 +4,11 @@ from routes.auth_routes import auth_bp
 from routes.calendar_routes import calendar_bp
 from flask import render_template
 import os
-
 from routes.admin_routes import admin_bp
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 app = Flask(__name__)
