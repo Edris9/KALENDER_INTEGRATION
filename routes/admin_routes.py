@@ -5,7 +5,7 @@ from services.calendar_reader import get_availability
 from services.calendar_writer import book_meeting
 from services.supabase_client import supabase
 from utils.time_utils import get_free_slots
-from services.email_service import send_booking_confirmation_lead, send_booking_notification_admin
+from services.email_service import send_booking_confirmation_lead, send_booking_confirmation_client
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -108,7 +108,8 @@ def admin_book(client_id):
         titel=data["title"],
         start_tid=data["start_tid"],
         end_tid=data["slut_tid"],
-        deltagare_email=data["email"]
+        deltagare_email=data["email"],
+        client_email=client["email"]
     )
     lead_name = data.get("title", "").replace("Meeting with ", "")
 
@@ -118,16 +119,17 @@ def admin_book(client_id):
         meeting_title=data["title"],
         start_tid=data["start_tid"],
         end_tid=data["slut_tid"],
-        calendar_link=link
+        calendar_link=link,
+        client_name=client["name"],      
+        client_email=client["email"] 
     )
 
-    send_booking_notification_admin(
-        lead_email=data["email"],
-        lead_name=lead_name,
+    send_booking_confirmation_client(
+        client_email=client["email"],
+        client_name=client["name"],
         meeting_title=data["title"],
         start_tid=data["start_tid"],
         end_tid=data["slut_tid"],
-        client_name=client["name"],
         calendar_link=link
     )
     

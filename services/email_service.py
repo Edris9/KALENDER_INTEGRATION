@@ -3,7 +3,7 @@ import resend
 from datetime import datetime
 import base64
 
-FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "edris@theshowcase.ai")
+FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "noreply@theshowcase.ai")
 FROM_NAME = os.environ.get("RESEND_FROM_NAME", "Showcase")
 FROM = f"{FROM_NAME} <{FROM_EMAIL}>"
 
@@ -16,7 +16,7 @@ def format_time(dt_str):
     dt = datetime.fromisoformat(dt_str.replace('+01:00', ''))
     return dt.strftime("%A %d %B %Y"), dt.strftime("%H:%M")
 
-def load_template(lead_name, lead_email, meeting_title, start_tid, end_tid, calendar_link=""):
+def load_template(lead_name, lead_email, meeting_title, start_tid, end_tid, calendar_link="", client_name="", client_email=""):
     # Absolut sökväg baserat på var email_service.py ligger
     base_dir = os.path.dirname(os.path.abspath(__file__))
     template_path = os.path.join(base_dir, "..", "E-mail_tempelate", "email_template.html")
@@ -44,30 +44,27 @@ def load_template(lead_name, lead_email, meeting_title, start_tid, end_tid, cale
     html = html.replace("{{TIME_START}}", start_time)
     html = html.replace("{{TIME_END}}", end_time)
     html = html.replace("{{CALENDAR_LINK}}", calendar_link or "#")
-    organiser_name = os.environ.get("RESEND_FROM_NAME", "Showcase")
-    organiser_email = os.environ.get("ADMIN_EMAIL", "edris@theshowcase.ai")
-
-    html = html.replace("{{ORGANISER_NAME}}", organiser_name)
-    html = html.replace("{{ORGANISER_EMAIL}}", organiser_email)
+    html = html.replace("{{ORGANISER_NAME}}", client_name)
+    html = html.replace("{{ORGANISER_EMAIL}}", client_email)
         
     return html
 
-def send_booking_confirmation_lead(lead_email, lead_name, meeting_title, start_tid, end_tid, calendar_link=""):
+def send_booking_confirmation_lead(lead_email, lead_name, meeting_title, start_tid, end_tid, calendar_link="", client_name="", client_email=""):
     r = get_resend()
-    html = load_template(lead_name, lead_email, meeting_title, start_tid, end_tid, calendar_link)
+    html = load_template(lead_name, lead_email, meeting_title, start_tid, end_tid, calendar_link, client_name, client_email)
     r.Emails.send({
         "from": FROM,
         "to": lead_email,
-        "subject": f"✅ Meeting Confirmed: {meeting_title}",
+        "subject": f"Meeting Confirmed: {meeting_title}",
         "html": html
     })
 
-def send_booking_notification_admin(lead_email, lead_name, meeting_title, start_tid, end_tid, client_name, calendar_link=""):
+def send_booking_confirmation_client(client_email, client_name, meeting_title, start_tid, end_tid, calendar_link=""):
     r = get_resend()
-    html = load_template(lead_name, lead_email, meeting_title, start_tid, end_tid, calendar_link)
+    html = load_template(client_name, client_email, meeting_title, start_tid, end_tid, calendar_link, client_name, client_email)
     r.Emails.send({
-       "from": FROM,
-        "to": FROM_EMAIL,
-        "subject": f"🚀 New Meeting Booked: {meeting_title}",
+        "from": FROM,
+        "to": client_email,
+        "subject": f"New Meeting Booked: {meeting_title}",
         "html": html
     })

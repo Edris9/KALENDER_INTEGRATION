@@ -1,8 +1,6 @@
 from googleapiclient.discovery import build
 
-ADMIN_EMAIL = "edris@theshowcase.ai"  # ← din email  
-
-def book_meeting(credentials, titel, start_tid, end_tid, deltagare_email):
+def book_meeting(credentials, titel, start_tid, end_tid, deltagare_email, client_email=""):
     service = build("calendar", "v3", credentials=credentials)
     
     event = {
@@ -16,15 +14,15 @@ def book_meeting(credentials, titel, start_tid, end_tid, deltagare_email):
             "timeZone": "Europe/Stockholm"
         },
         "attendees": [
-            {"email": deltagare_email},
-            {"email": ADMIN_EMAIL}  # ← Admin får också inbjudan + notis
+            {"email": deltagare_email},   # lead
+            {"email": client_email}        # klienten som äger kalendern
         ]
     }
     
     event_result = service.events().insert(
         calendarId="primary",
         body=event,
-        sendUpdates="all"  # Skickar email till ALLA deltagare
+        sendUpdates="all"
     ).execute()
     
     return event_result.get("htmlLink")
