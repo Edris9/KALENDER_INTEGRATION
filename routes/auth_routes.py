@@ -95,7 +95,7 @@ def callback():
     name = user_info.get("name")
     
     # Spara i Supabase
-    from services.supabase_client import supabase
+    from services.google.supabase_client import supabase
 
     existing = supabase.table("clients").select("*").eq("email", email).execute()
     

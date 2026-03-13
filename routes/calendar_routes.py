@@ -1,8 +1,8 @@
 from flask import Blueprint, session, jsonify, request, redirect
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from services.calendar_reader import get_availability
-from services.calendar_writer import book_meeting
+from services.google.calendar_reader import get_availability
+from services.google.calendar_writer import book_meeting
 from utils.time_utils import get_free_slots
 
 calendar_bp = Blueprint("calendar", __name__)

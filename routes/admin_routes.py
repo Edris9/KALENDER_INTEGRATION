@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, request, session, redirect, jsonify
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from services.calendar_reader import get_availability
-from services.calendar_writer import book_meeting
-from services.supabase_client import supabase
+from services.google.calendar_reader import get_availability
+from services.google.calendar_writer import book_meeting
+from services.google.supabase_client import supabase
 from utils.time_utils import get_free_slots
-from services.email_service import send_booking_confirmation_lead, send_booking_confirmation_client
+from services.google.email_service import send_booking_confirmation_lead, send_booking_confirmation_client
 
 admin_bp = Blueprint("admin", __name__)
 
