@@ -1,3 +1,5 @@
+from xmlrpc import client
+
 from flask import Blueprint, render_template, request, session, redirect, jsonify
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -5,6 +7,9 @@ from services.google.calendar_reader import get_availability
 from services.google.calendar_writer import book_meeting
 from services.google.supabase_client import supabase
 from utils.time_utils import get_free_slots
+import ast
+from services.microsoft.ms_calendar_reader import get_ms_availability
+from services.microsoft.ms_auth import refresh_ms_token
 from services.google.email_service import send_booking_confirmation_lead, send_booking_confirmation_client
 
 admin_bp = Blueprint("admin", __name__)
@@ -77,13 +82,21 @@ def client_availability(client_id):
     provider = client.get("provider", "google")
 
     if provider == "microsoft":
-        from services.microsoft.ms_calendar_reader import get_ms_availability
-        events = get_ms_availability(client["token"])
+        new_token = refresh_ms_token(client["refresh_token"])
+        if new_token:
+            supabase.table("clients").update({
+                "token": new_token
+            }).eq("id", client["id"]).execute()
+            access_token = new_token
+        else:
+            access_token = client["token"]
+        
+        events = get_ms_availability(access_token)
+        print("MS EVENTS:", events[:2])  # ← flytta hit!
         free_slots = get_free_slots(events)
         return jsonify({"Free_slots": free_slots})
     
     # Google
-    import ast
     scopes = ast.literal_eval(client["scopes"]) if client["scopes"] else []
     credentials = refresh_credentials(client)
     events = get_availability(credentials)

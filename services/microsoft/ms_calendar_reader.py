@@ -24,8 +24,8 @@ def get_ms_availability(access_token):
         if event.get("isAllDay"):
             continue
         events.append({
-            "Start": event["start"]["dateTime"],  # stor bokstav
-            "End": event["end"]["dateTime"]        # stor bokstav
+            "Start": (datetime.fromisoformat(event["start"]["dateTime"][:19]) + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S"),
+            "End": (datetime.fromisoformat(event["end"]["dateTime"][:19]) + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
         })
     
     return events

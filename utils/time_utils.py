@@ -26,8 +26,8 @@ def get_free_slots(events):
         start_str = event.get("Start")
         slut_str = event.get("End")
         
-        if not start_str or not slut_str or "T" not in start_str:
-            continue
+        if not start_str or not slut_str:
+                continue
             
         try:
             start_dt = datetime.fromisoformat(start_str.replace('Z', '+00:00')).replace(tzinfo=None)

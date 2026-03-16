@@ -26,6 +26,14 @@ def get_auth_url():
         redirect_uri=MS_REDIRECT_URI
     )
 
+def refresh_ms_token(refresh_token):
+    app = create_msal_app()
+    result = app.acquire_token_by_refresh_token(
+        refresh_token,
+        scopes=SCOPES
+    )
+    return result.get("access_token")
+
 def get_token_from_code(code):
     app = create_msal_app()
     result = app.acquire_token_by_authorization_code(
