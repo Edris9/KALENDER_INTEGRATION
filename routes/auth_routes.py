@@ -106,7 +106,8 @@ def callback():
             "token_uri": credentials.token_uri,
             "client_id": credentials.client_id,
             "client_secret": credentials.client_secret,
-            "scopes": str(list(credentials.scopes))
+            "scopes": str(list(credentials.scopes)),
+            "provider": "google" 
         }).eq("email", email).execute()
     else:
         supabase.table("clients").insert({
@@ -117,7 +118,8 @@ def callback():
             "token_uri": credentials.token_uri,
             "client_id": credentials.client_id,
             "client_secret": credentials.client_secret,
-            "scopes": str(list(credentials.scopes))
+            "scopes": str(list(credentials.scopes)),
+            "provider": "google"
         }).execute()
     
     return redirect("/")

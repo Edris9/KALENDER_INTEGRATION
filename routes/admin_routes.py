@@ -74,15 +74,20 @@ def client_availability(client_id):
         return jsonify({"error": "Client not found"}), 404
     
     client = result.data[0]
+    provider = client.get("provider", "google")
+
+    if provider == "microsoft":
+        from services.microsoft.ms_calendar_reader import get_ms_availability
+        events = get_ms_availability(client["token"])
+        free_slots = get_free_slots(events)
+        return jsonify({"Free_slots": free_slots})
     
+    # Google
     import ast
-    scopes = ast.literal_eval(client["scopes"])
-    
+    scopes = ast.literal_eval(client["scopes"]) if client["scopes"] else []
     credentials = refresh_credentials(client)
-    
     events = get_availability(credentials)
     free_slots = get_free_slots(events)
-    
     return jsonify({"Free_slots": free_slots})
 
 @admin_bp.route("/admin/book/<client_id>", methods=["POST"])
@@ -96,22 +101,31 @@ def admin_book(client_id):
         return jsonify({"error": "Client not found"}), 404
     
     client = result.data[0]
-    
-    import ast
-    scopes = ast.literal_eval(client["scopes"])
-    
-    credentials = refresh_credentials(client)
-    
+    provider = client.get("provider", "google")
     data = request.json
-    link = book_meeting(
-        credentials,
-        titel=data["title"],
-        start_tid=data["start_tid"],
-        end_tid=data["slut_tid"],
-        deltagare_email=data["email"],
-        client_email=client["email"]
-    )
     lead_name = data.get("title", "").replace("Meeting with ", "")
+
+    if provider == "microsoft":
+        from services.microsoft.ms_calendar_writer import book_ms_meeting
+        link = book_ms_meeting(
+            client["token"],
+            titel=data["title"],
+            start_tid=data["start_tid"],
+            end_tid=data["slut_tid"],
+            deltagare_email=data["email"],
+            client_email=client["email"]
+        )
+    else:
+        # Google
+        credentials = refresh_credentials(client)
+        link = book_meeting(
+            credentials,
+            titel=data["title"],
+            start_tid=data["start_tid"],
+            end_tid=data["slut_tid"],
+            deltagare_email=data["email"],
+            client_email=client["email"]
+        )
 
     send_booking_confirmation_lead(
         lead_email=data["email"],
@@ -120,8 +134,8 @@ def admin_book(client_id):
         start_tid=data["start_tid"],
         end_tid=data["slut_tid"],
         calendar_link=link,
-        client_name=client["name"],      
-        client_email=client["email"] 
+        client_name=client["name"],
+        client_email=client["email"]
     )
 
     send_booking_confirmation_client(
@@ -130,10 +144,11 @@ def admin_book(client_id):
         meeting_title=data["title"],
         start_tid=data["start_tid"],
         end_tid=data["slut_tid"],
-        calendar_link=link
+        calendar_link=link,
+        lead_name=lead_name,       
+        lead_email=data["email"]    
     )
     
-    # Uppdatera total_meetings
     supabase.table("clients").update({
         "total_meetings": client["total_meetings"] + 1
     }).eq("id", client_id).execute()

@@ -21,9 +21,14 @@
     <div class="subtitle">Book a meeting at a time that suits you</div>
   </div>
 
-  <div id="login-section" class="login-section">
-    <button class="book-btn connect-google" onclick="window.location.href='/login'">
-      🔗 Connect Google Calendar
+  <div id="login-section" class="login-section" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+    <button class="book-btn connect-google" style="width: 220px; padding: 10px 0;" onclick="window.location.href='/login'">
+      <img src="https://img.icons8.com/?size=100&id=WKF3bm1munsk&format=png&color=000000" alt="Google Calendar" style="height: 24px; vertical-align: middle; margin-right: 8px;">
+      Connect Google Calendar
+    </button>
+    <button class="book-btn connect-microsoft" style="width: 220px; padding: 3px 0;" onclick="window.location.href='/microsoft/login'">
+      <img src ="https://img.icons8.com/?size=100&id=kzZctsAbGur5&format=png&color=000000" alt="Microsoft Calendar" style="height: 24px; vertical-align: middle; margin-right: 8px;">
+      Connect Microsoft Calendar
     </button>
   </div>
 

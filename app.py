@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from flask import Flask
 from flask import session, redirect
 from routes.auth_routes import auth_bp
@@ -5,9 +7,9 @@ from routes.calendar_routes import calendar_bp
 from flask import render_template
 import os
 from routes.admin_routes import admin_bp
-from dotenv import load_dotenv
 
-load_dotenv()
+from routes.microsoft_routes import ms_bp
+
 
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -41,6 +43,7 @@ def logout():
 # Registrera routes
 app.register_blueprint(auth_bp)
 app.register_blueprint(calendar_bp)
+app.register_blueprint(ms_bp)
 app.secret_key = "showcase_secret_key"
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = False

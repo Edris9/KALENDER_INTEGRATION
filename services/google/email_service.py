@@ -58,9 +58,9 @@ def send_booking_confirmation_lead(lead_email, lead_name, meeting_title, start_t
         "html": html
     })
 
-def send_booking_confirmation_client(client_email, client_name, meeting_title, start_tid, end_tid, calendar_link=""):
+def send_booking_confirmation_client(client_email, client_name, meeting_title, start_tid, end_tid, calendar_link="", lead_name="", lead_email=""):
     r = get_resend()
-    html = load_template(client_name, client_email, meeting_title, start_tid, end_tid, calendar_link, client_name, client_email)
+    html = load_template(lead_name, lead_email, meeting_title, start_tid, end_tid, calendar_link, client_name, client_email)
     r.Emails.send({
         "from": FROM,
         "to": client_email,
