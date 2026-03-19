@@ -1,5 +1,5 @@
 from xmlrpc import client
-
+from middleware.auth import admin_required
 from flask import Blueprint, render_template, request, session, redirect, jsonify
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -54,21 +54,18 @@ def admin_login():
     return render_template("admin/admin_login.html")
 
 @admin_bp.route("/admin")
+@admin_required
 def admin_panel():
-    if not session.get("is_admin"):
-        return redirect("/admin/login")
     return render_template("admin/admin.html")
 
 @admin_bp.route("/admin/clients")
+@admin_required
 def get_clients():
-    if not session.get("is_admin"):
-        return jsonify({"error": "Unauthorized"}), 401
-    
     result = supabase.table("clients").select("id, name, email, connected_at").execute()
-    
     return jsonify({"clients": result.data})
 
 @admin_bp.route("/admin/availability/<client_id>")
+@admin_required
 def client_availability(client_id):
     if not session.get("is_admin"):
         return jsonify({"error": "Unauthorized"}), 401
