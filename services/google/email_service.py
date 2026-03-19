@@ -18,9 +18,9 @@ def format_time(dt_str):
 
 def load_template(lead_name, lead_email, meeting_title, start_tid, end_tid, calendar_link="", client_name="", client_email=""):
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    template_path = os.path.join(base_dir, "..", "..", "E-mail_tempelate", "email_template.html")
-    logo_path = os.path.join(base_dir, "..", "..", "E-mail_tempelate", "theshowcaseai_logo.jpg")
-    brain_path = os.path.join(base_dir, "..", "..", "E-mail_tempelate", "imag.png")
+    template_path = os.path.join(base_dir, "..", "..", "templates", "emails", "email_template.html")
+    logo_path = os.path.join(base_dir, "..", "..", "templates", "emails", "theshowcaseai_logo.jpg")
+    brain_path = os.path.join(base_dir, "..", "..", "templates", "emails", "imag.png")
     
     with open(template_path, "r", encoding="utf-8") as f:
         html = f.read()
