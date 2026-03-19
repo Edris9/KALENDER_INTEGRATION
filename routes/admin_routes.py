@@ -50,14 +50,14 @@ def admin_login():
             session["is_admin"] = True
             return redirect("/admin")
         else:
-            return render_template("admin_login.html", error="Wrong username or password!")
-    return render_template("admin_login.html")
+            return render_template("admin/admin_login.html", error="Wrong username or password!")
+    return render_template("admin/admin_login.html")
 
 @admin_bp.route("/admin")
 def admin_panel():
     if not session.get("is_admin"):
         return redirect("/admin/login")
-    return render_template("admin.html")
+    return render_template("admin/admin.html")
 
 @admin_bp.route("/admin/clients")
 def get_clients():
