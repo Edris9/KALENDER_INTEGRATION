@@ -41,6 +41,13 @@ def refresh_credentials(client):
     
     return credentials
 
+
+@admin_bp.route("/admin/unread-bookings")
+@admin_required
+def unread_bookings():
+    result = supabase.table("bookings").select("id").eq("is_read", False).execute()
+    return jsonify({"count": len(result.data)})
+
 @admin_bp.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -159,6 +166,18 @@ def admin_book(client_id):
         lead_email=data["email"]    
     )
     
+    supabase.table("bookings").insert({
+        "client_id": client_id,
+        "lead_name": lead_name,
+        "lead_email": data["email"],
+        "meeting_title": data["title"],
+        "start_time": data["start_tid"].replace("+01:00", ""),
+        "end_time": data["slut_tid"].replace("+01:00", ""),
+        "calendar_link": link,
+        "provider": provider,
+        "status": "confirmed"
+    }).execute()
+    
     supabase.table("clients").update({
         "total_meetings": client["total_meetings"] + 1
     }).eq("id", client_id).execute()
@@ -172,3 +191,15 @@ def admin_book(client_id):
 def admin_logout():
     session.pop("is_admin", None)
     return redirect("/admin/login")
+
+@admin_bp.route("/admin/bookings")
+@admin_required
+def get_bookings():
+    result = supabase.table("bookings").select("*").order("start_time", desc=True).execute()
+    return jsonify({"bookings": result.data})
+
+@admin_bp.route("/admin/bookings/mark-read", methods=["POST"])
+@admin_required
+def mark_bookings_read():
+    supabase.table("bookings").update({"is_read": True}).eq("is_read", False).execute()
+    return jsonify({"ok": True})
