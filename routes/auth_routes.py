@@ -7,6 +7,9 @@ from flask import Blueprint, redirect, session, request
 from google_auth_oauthlib.flow import Flow
 from config.settings import SCOPES, REDIRECT_URI
 import requests as req
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+import uuid
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"    
@@ -121,6 +124,29 @@ def callback():
             "scopes": str(list(credentials.scopes)),
             "provider": "google"
         }).execute()
+
+
+        creds = Credentials(
+        token=credentials.token,
+        refresh_token=credentials.refresh_token,
+        token_uri=credentials.token_uri,
+        client_id=credentials.client_id,
+        client_secret=credentials.client_secret,
+        scopes=list(credentials.scopes)
+    )
+
+    service = build("calendar", "v3", credentials=creds)
+    channel_id = str(uuid.uuid4())
+
+    service.events().watch(
+        calendarId="primary",
+        body={
+            "id": channel_id,
+            "type": "web_hook",
+            "address": "https://kalender-integration-1.onrender.com/webhook/google"
+        }
+    ).execute()
+
     
     return redirect("/")
 
@@ -128,3 +154,4 @@ def callback():
 def logout():
     session.clear()
     return redirect("/")
+
