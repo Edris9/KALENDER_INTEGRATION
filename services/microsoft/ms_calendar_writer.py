@@ -37,4 +37,4 @@ def book_ms_meeting(access_token, titel, start_tid, end_tid, deltagare_email, cl
     )
     
     data = response.json()
-    return data.get("webLink")
+    return data.get("webLink"), data.get("id")

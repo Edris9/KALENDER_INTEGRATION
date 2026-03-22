@@ -124,7 +124,7 @@ def admin_book(client_id):
 
     if provider == "microsoft":
         from services.microsoft.ms_calendar_writer import book_ms_meeting
-        link = book_ms_meeting(
+        link, event_id = book_ms_meeting(
             client["token"],
             titel=data["title"],
             start_tid=data["start_tid"],
