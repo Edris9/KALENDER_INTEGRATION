@@ -350,6 +350,7 @@ input:focus { border-color: #4285f4; }
 .status-badge.confirmed { background: #e6f4ea; color: #34a853; }
 .status-badge.cancelled { background: #fce8e6; color: #e53935; }
 .status-badge.no-show { background: #fff3e0; color: #f57c00; }
+.status-badge.pending { background: #fff3e0; color: #f57c00; }
 .status-badge.completed { background: #e8f0fe; color: #4285f4; }
 
 /* CONFIRMATION */
