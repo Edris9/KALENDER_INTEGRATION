@@ -86,7 +86,7 @@ def ms_book():
     data = request.json
     access_token = session["ms_credentials"]["access_token"]
     
-    link = book_ms_meeting(
+    link, event_id = book_ms_meeting(
         access_token,
         titel=data["title"],
         start_tid=data["start_tid"],

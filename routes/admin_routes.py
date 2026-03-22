@@ -135,14 +135,14 @@ def admin_book(client_id):
     else:
         # Google
         credentials = refresh_credentials(client)
-        link = book_meeting(
-            credentials,
-            titel=data["title"],
-            start_tid=data["start_tid"],
-            end_tid=data["slut_tid"],
-            deltagare_email=data["email"],
-            client_email=client["email"]
-        )
+        link, event_id = book_meeting(
+        credentials,
+        titel=data["title"],
+        start_tid=data["start_tid"],
+        end_tid=data["slut_tid"],
+        deltagare_email=data["email"],
+        client_email=client["email"]
+    )
 
     send_booking_confirmation_lead(
         lead_email=data["email"],

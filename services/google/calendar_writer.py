@@ -25,4 +25,4 @@ def book_meeting(credentials, titel, start_tid, end_tid, deltagare_email, client
         sendUpdates="all"
     ).execute()
     
-    return event_result.get("htmlLink")
+    return event_result.get("htmlLink"), event_result.get("id")
