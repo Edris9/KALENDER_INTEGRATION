@@ -7,7 +7,7 @@ from routes.calendar_routes import calendar_bp
 from flask import render_template
 import os
 from routes.admin_routes import admin_bp
-
+from routes.webhook_routes import webhook_bp
 from routes.microsoft_routes import ms_bp
 
 
@@ -47,6 +47,6 @@ app.register_blueprint(ms_bp)
 app.secret_key = "showcase_secret_key"
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = False
-
+app.register_blueprint(webhook_bp)
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
