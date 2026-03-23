@@ -15,8 +15,10 @@ def google_webhook():
 
     # Hämta alla Google-klienter
     clients = supabase.table("clients").select("*").eq("provider", "google").execute()
+    print(f"Found {len(clients.data)} Google clients")
 
     for client in clients.data:
+        print(f"Processing client: {client['email']}")
         try:
             scopes = ast.literal_eval(client["scopes"])
             creds = Credentials(
@@ -38,12 +40,15 @@ def google_webhook():
                 .eq("provider", "google")\
                 .not_.is_("event_id", "null")\
                 .execute()
+            print(f"Found {len(bookings.data)} bookings for {client['email']}")
 
             for booking in bookings.data:
+                print(f"Checking booking: {booking['id']} event_id: {booking['event_id']}")
                 event = service.events().get(
                     calendarId="primary",
                     eventId=booking["event_id"]
                 ).execute()
+                
 
                 attendees = event.get("attendees", [])
                 for attendee in attendees:
