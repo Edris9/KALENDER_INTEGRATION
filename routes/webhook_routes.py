@@ -7,10 +7,11 @@ import ast
 
 webhook_bp = Blueprint("webhook", __name__)
 
-@webhook_bp.route("/webhook/google", methods=["POST"])
+@webhook_bp.route("/webhook/google", methods=["GET", "POST"])
 def google_webhook():
-    resource_id = request.headers.get("X-Goog-Resource-ID")
-    print("Google webhook received:", resource_id)
+    print("WEBHOOK HIT!")
+    print("Headers:", dict(request.headers))
+    print("Body:", request.data)
 
     # Hämta alla Google-klienter
     clients = supabase.table("clients").select("*").eq("provider", "google").execute()
