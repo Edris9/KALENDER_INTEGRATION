@@ -52,7 +52,7 @@ def google_webhook():
 
                 attendees = event.get("attendees", [])
                 for attendee in attendees:
-                    if attendee.get("email") == booking["lead_email"]:
+                    if attendee.get("email", "").lower() == booking["lead_email"].lower():
                         response = attendee.get("responseStatus")
                         if response == "accepted":
                             new_status = "confirmed"
