@@ -64,7 +64,9 @@ def google_webhook():
                         print(f"Updated booking {booking['id']} → {new_status}")
 
         except Exception as e:
-            print(f"Error processing client {client['id']}: {e}")
+            print(f"ERROR: {e}")
+            import traceback
+            traceback.print_exc()
             continue
 
     return "", 200
