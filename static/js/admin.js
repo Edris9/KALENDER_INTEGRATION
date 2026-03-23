@@ -43,6 +43,7 @@ function selectClient(clientId, clientName) {
     document.getElementById('selected-client-name').innerText = clientName;
     switchTab('calendar');
     loadCalendar(clientId);
+    saveState();
 }
 
 function loadCalendar(clientId) {
@@ -235,6 +236,7 @@ function switchTab(tabName) {
     });
     const activeTab = document.getElementById(`tab-${tabName}`);
     if (activeTab) activeTab.style.display = 'block';
+    saveState();
 }
 
 function loadHistory() {
@@ -265,10 +267,33 @@ function loadHistory() {
             document.getElementById('history-badge').style.display = 'none';
         });
 }
+
+// Spara state i URL hash
+function saveState() {
+    const hash = {
+        client: selectedClient,
+        clientName: document.getElementById('selected-client-name')?.innerText,
+        tab: document.querySelector('.tab-btn.active')?.dataset.tab || 'calendar'
+    };
+    window.location.hash = encodeURIComponent(JSON.stringify(hash));
+}
+
+// Återställ state från URL hash
+function restoreState() {
+    if (!window.location.hash) return;
+    try {
+        const hash = JSON.parse(decodeURIComponent(window.location.hash.slice(1)));
+        if (hash.client) {
+            selectClient(hash.client, hash.clientName);
+            setTimeout(() => switchTab(hash.tab), 500);
+        }
+    } catch (e) {}
+}
     
 document.addEventListener('DOMContentLoaded', () => {
     loadClients();
     loadUnreadCount();
+    restoreState();
     
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
