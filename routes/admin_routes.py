@@ -175,7 +175,8 @@ def admin_book(client_id):
         "end_time": data["slut_tid"].replace("+01:00", ""),
         "calendar_link": link,
         "provider": provider,
-        "status": "pending"
+        "status": "pending",
+        "event_id": event_id  # ← lägg till denna
     }).execute()
     
     supabase.table("clients").update({
