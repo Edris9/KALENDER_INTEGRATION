@@ -44,6 +44,7 @@ function selectClient(clientId, clientName) {
     switchTab('calendar');
     loadCalendar(clientId);
     saveState();
+    closeSidebar();
 }
 
 function loadCalendar(clientId) {
@@ -288,6 +289,20 @@ function restoreState() {
             setTimeout(() => switchTab(hash.tab), 500);
         }
     } catch (e) {}
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('active');
+}
+
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+}
+
+function toggleTabs() {
+    document.getElementById('tabs-list').classList.toggle('open');
 }
     
 document.addEventListener('DOMContentLoaded', () => {
