@@ -30,8 +30,8 @@ def load_template(lead_name, lead_email, meeting_title, start_tid, end_tid, cale
     with open(brain_path, "rb") as f:
         brain_b64 = base64.b64encode(f.read()).decode()
     
-    html = html.replace("{{LOGO_URL}}", f"data:image/jpeg;base64,{logo_b64}")
-    html = html.replace("{{BRAIN_URL}}", f"data:image/png;base64,{brain_b64}")
+    html = html.replace("{{LOGO_URL}}", "https://raw.githubusercontent.com/Edris9/KALENDER_INTEGRATION/main/templates/emails/theshowcaseai_logo.jpg")
+    html = html.replace("{{BRAIN_URL}}", "https://raw.githubusercontent.com/Edris9/KALENDER_INTEGRATION/main/templates/emails/imag.png")
     
     date_str, start_time = format_time(start_tid)
     _, end_time = format_time(end_tid)

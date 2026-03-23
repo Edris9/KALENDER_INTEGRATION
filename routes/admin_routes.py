@@ -136,6 +136,7 @@ def admin_book(client_id):
         # Google
         credentials = refresh_credentials(client)
         link, event_id = book_meeting(
+        print(f"link: {link}, event_id: {event_id}"),
         credentials,
         titel=data["title"],
         start_tid=data["start_tid"],
