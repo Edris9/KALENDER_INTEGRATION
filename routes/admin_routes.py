@@ -196,7 +196,11 @@ def admin_logout():
 @admin_bp.route("/admin/bookings")
 @admin_required
 def get_bookings():
-    result = supabase.table("bookings").select("*").order("start_time", desc=True).execute()
+    client_id = request.args.get("client_id")
+    query = supabase.table("bookings").select("*").order("start_time", desc=True)
+    if client_id:
+        query = query.eq("client_id", client_id)
+    result = query.execute()
     return jsonify({"bookings": result.data})
 
 @admin_bp.route("/admin/bookings/mark-read", methods=["POST"])

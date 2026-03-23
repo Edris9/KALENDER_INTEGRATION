@@ -238,7 +238,7 @@ function switchTab(tabName) {
 }
 
 function loadHistory() {
-    fetch('/admin/bookings')
+    fetch(`/admin/bookings?client_id=${selectedClient}`)
         .then(r => r.json())
         .then(data => {
             const container = document.getElementById('tab-history');
