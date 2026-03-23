@@ -269,10 +269,20 @@ function loadHistory() {
 document.addEventListener('DOMContentLoaded', () => {
     loadClients();
     loadUnreadCount();
+    
     document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        switchTab(btn.dataset.tab);
-        if (btn.dataset.tab === 'history') loadHistory();
+        btn.addEventListener('click', () => {
+            switchTab(btn.dataset.tab);
+            if (btn.dataset.tab === 'history') loadHistory();
+        });
     });
-});
+
+    // Auto-refresh var 10:e sekund
+    setInterval(() => {
+        const historyTab = document.getElementById('tab-history');
+        if (historyTab && historyTab.style.display !== 'none') {
+            loadHistory();
+        }
+        loadUnreadCount();
+    }, 10000);
 });
