@@ -1,4 +1,5 @@
 import os
+from urllib import response
 from flask import Blueprint, redirect, request, session, jsonify
 from services.microsoft.ms_auth import get_auth_url, get_token_from_code
 from services.microsoft.ms_calendar_reader import get_ms_availability
@@ -71,11 +72,12 @@ def ms_callback():
         "expirationDateTime": (datetime.utcnow() + timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%S.0000000Z"),
         "clientState": "showcase-secret"
     }
-    req.post(
+    response = req.post(
         "https://graph.microsoft.com/v1.0/subscriptions",
         headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
         json=subscription_body
     )
+    print(f"MS Subscription response: {response.status_code} - {response.json()}")
     
     return redirect("/")
 
