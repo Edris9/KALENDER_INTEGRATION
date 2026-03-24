@@ -7,7 +7,7 @@ from routes.calendar_routes import calendar_bp
 from flask import render_template
 import os
 from routes.admin_routes import admin_bp
-from KALENDER_INTEGRATION.routes.google_webhook import webhook_bp
+from routes.google_webhook import webhook_bp
 from routes.microsoft_routes import ms_bp
 from routes.ms_webhook import ms_webhook_bp
 
