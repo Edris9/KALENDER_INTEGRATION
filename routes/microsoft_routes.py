@@ -47,9 +47,9 @@ def ms_callback():
         "refresh_token": refresh_token
     }
     
-    # Spara i Supabase
+        # Spara i Supabase
     existing = supabase.table("clients").select("*").eq("email", email).execute()
-    
+
     if existing.data:
         supabase.table("clients").update({
             "token": access_token,
@@ -65,7 +65,8 @@ def ms_callback():
             "provider": "microsoft"
         }).execute()
 
-        subscription_body = {
+    # Subscription körs ALLTID efter login
+    subscription_body = {
         "changeType": "updated",
         "notificationUrl": "https://kalender-integration-1.onrender.com/webhook/microsoft",
         "resource": "/me/events",
@@ -78,7 +79,7 @@ def ms_callback():
         json=subscription_body
     )
     print(f"MS Subscription response: {response.status_code} - {response.json()}")
-    
+
     return redirect("/")
 
 @ms_bp.route("/microsoft/availability")
