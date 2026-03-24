@@ -7,8 +7,10 @@ from routes.calendar_routes import calendar_bp
 from flask import render_template
 import os
 from routes.admin_routes import admin_bp
-from routes.webhook_routes import webhook_bp
+from KALENDER_INTEGRATION.routes.google_webhook import webhook_bp
 from routes.microsoft_routes import ms_bp
+from routes.ms_webhook import ms_webhook_bp
+
 
 
 
@@ -44,6 +46,7 @@ def logout():
 app.register_blueprint(auth_bp)
 app.register_blueprint(calendar_bp)
 app.register_blueprint(ms_bp)
+app.register_blueprint(ms_webhook_bp)
 app.secret_key = "showcase_secret_key"
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = False

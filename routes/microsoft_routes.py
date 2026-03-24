@@ -6,6 +6,8 @@ from services.microsoft.ms_calendar_writer import book_ms_meeting
 from services.google.supabase_client import supabase
 from utils.time_utils import get_free_slots
 import requests as req
+import uuid
+from datetime import datetime, timedelta
 
 ms_bp = Blueprint("microsoft", __name__)
 
@@ -61,6 +63,19 @@ def ms_callback():
             "refresh_token": refresh_token,
             "provider": "microsoft"
         }).execute()
+
+        subscription_body = {
+        "changeType": "updated",
+        "notificationUrl": "https://kalender-integration-1.onrender.com/webhook/microsoft",
+        "resource": "/me/events",
+        "expirationDateTime": (datetime.utcnow() + timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%S.0000000Z"),
+        "clientState": "showcase-secret"
+    }
+    req.post(
+        "https://graph.microsoft.com/v1.0/subscriptions",
+        headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+        json=subscription_body
+    )
     
     return redirect("/")
 
