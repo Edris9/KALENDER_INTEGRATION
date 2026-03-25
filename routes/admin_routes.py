@@ -208,3 +208,29 @@ def get_bookings():
 def mark_bookings_read():
     supabase.table("bookings").update({"is_read": True}).eq("is_read", False).execute()
     return jsonify({"ok": True})
+
+
+@admin_bp.route("/admin/reminders")
+@admin_required
+def get_reminders():
+    client_id = request.args.get("client_id")
+    
+    query = supabase.table("bookings").select(
+        "lead_name, lead_email, start_time, status, reminder_24h_sent, reminder_1h_sent, client_id"
+    )
+    if client_id:
+        query = query.eq("client_id", client_id)
+    
+    bookings = query.order("start_time", desc=False).execute().data
+
+    # Hämta klientnamn
+    clients = {c["id"]: c["name"] for c in supabase.table("clients").select("id, name").execute().data}
+
+    reminders = []
+    for b in bookings:
+        reminders.append({
+            **b,
+            "client_name": clients.get(b["client_id"], "Unknown")
+        })
+
+    return jsonify({"reminders": reminders})

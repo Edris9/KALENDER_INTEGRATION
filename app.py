@@ -1,17 +1,17 @@
 from dotenv import load_dotenv
 load_dotenv()
-from flask import Flask
-from flask import session, redirect
+from flask import Flask, session, redirect, render_template
 from routes.auth_routes import auth_bp
 from routes.calendar_routes import calendar_bp
-from flask import render_template
-import os
 from routes.admin_routes import admin_bp
 from routes.google_webhook import webhook_bp
 from routes.microsoft_routes import ms_bp
 from routes.ms_webhook import ms_webhook_bp
-
-
+from apscheduler.schedulers.background import BackgroundScheduler
+from services.google.supabase_client import supabase
+from services.google.email_service import send_reminder_email
+from datetime import datetime, timezone
+import os
 
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -41,6 +41,48 @@ def logout():
         window.location.href = "/";
     </script>
     '''
+
+
+# ── APScheduler ──────────────────────────────────────────────
+def check_reminders():
+    now = datetime.now(timezone.utc)
+    bookings = supabase.table("bookings").select("*").in_(
+        "status", ["confirmed", "pending"]
+    ).execute().data
+
+    for b in bookings:
+        try:
+            start = datetime.fromisoformat(b["start_time"]).astimezone(timezone.utc)
+            diff_hours = (start - now).total_seconds() / 3600
+
+            # 1h påminnelse — endast confirmed
+            if (
+                b["status"] == "confirmed"
+                and not b["reminder_1h_sent"]
+                and 0 < diff_hours <= 1
+            ):
+                send_reminder_email(b, reminder_type="1h")
+                supabase.table("bookings").update(
+                    {"reminder_1h_sent": True}
+                ).eq("id", b["id"]).execute()
+
+            # 24h påminnelse — endast pending
+            elif (
+                b["status"] == "pending"
+                and not b["reminder_24h_sent"]
+                and 0 < diff_hours <= 24
+            ):
+                send_reminder_email(b, reminder_type="24h")
+                supabase.table("bookings").update(
+                    {"reminder_24h_sent": True}
+                ).eq("id", b["id"]).execute()
+
+        except Exception as e:
+            print(f"Reminder error for booking {b['id']}: {e}")
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(check_reminders, "interval", minutes=5)
+scheduler.start()
 
 # Registrera routes
 app.register_blueprint(auth_bp)

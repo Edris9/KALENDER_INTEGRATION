@@ -308,6 +308,33 @@ function closeSidebar() {
 function toggleTabs() {
     document.getElementById('tabs-list').classList.toggle('open');
 }
+
+function loadReminders() {
+    fetch(`/admin/reminders?client_id=${selectedClient}`)
+        .then(r => r.json())
+        .then(data => {
+            const tbody = document.getElementById('reminders-body');
+            if (!data.reminders || data.reminders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">No bookings yet</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.reminders.map(b => `
+                <tr>
+                    <td>${b.lead_name}<br/><small style="color:#999;">${b.lead_email}</small></td>
+                    <td>${b.client_name}</td>
+                    <td>${b.start_time.replace('T', ' ').slice(0, 16)}</td>
+                    <td>${reminderBadge(b.reminder_24h_sent, b.status === 'pending')}</td>
+                    <td>${reminderBadge(b.reminder_1h_sent, b.status === 'confirmed')}</td>
+                </tr>
+            `).join('');
+        });
+}
+
+function reminderBadge(sent, relevant) {
+    if (!relevant) return '<span style="color:#ccc;">➖ N/A</span>';
+    if (sent) return '<span style="color:#43a047;">✅ Sent</span>';
+    return '<span style="color:#f5a623;">⏳ Pending</span>';
+}
     
 document.addEventListener('DOMContentLoaded', () => {
     loadClients();
@@ -318,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             switchTab(btn.dataset.tab);
             if (btn.dataset.tab === 'history') loadHistory();
+            if (btn.dataset.tab === 'reminders') loadReminders();
         });
     });
 

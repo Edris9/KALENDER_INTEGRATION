@@ -8,3 +8,4 @@ supabase
 resend
 dotenv
 msal
+APScheduler==3.10.4

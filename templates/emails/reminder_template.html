@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meeting Reminder</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
+    }
+    .wrapper {
+      width: 100%;
+      background-color: #f4f4f4;
+      padding: 40px 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .header {
+      background-color: #1a1a1a;
+      padding: 28px 40px;
+      text-align: center;
+    }
+    .header img {
+      height: 40px;
+      width: auto;
+    }
+    .reminder-banner {
+      background-color: #f5a623;
+      color: #ffffff;
+      text-align: center;
+      padding: 12px 40px;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .body {
+      padding: 40px;
+    }
+    .brain-wrap {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .brain-wrap img {
+      height: 64px;
+      width: auto;
+    }
+    h1 {
+      font-size: 22px;
+      color: #1a1a1a;
+      margin: 0 0 8px 0;
+      text-align: center;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #666666;
+      text-align: center;
+      margin: 0 0 32px 0;
+    }
+    .meeting-card {
+      background-color: #f9f9f9;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+    .meeting-card .row {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .meeting-card .row:last-child {
+      margin-bottom: 0;
+    }
+    .meeting-card .icon {
+      font-size: 18px;
+      width: 28px;
+      flex-shrink: 0;
+    }
+    .meeting-card .label {
+      font-size: 11px;
+      color: #999999;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 2px;
+    }
+    .meeting-card .value {
+      font-size: 15px;
+      color: #1a1a1a;
+      font-weight: 600;
+    }
+    .cta-wrap {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .cta-btn {
+      display: inline-block;
+      background-color: #1a1a1a;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+    .divider {
+      border: none;
+      border-top: 1px solid #eeeeee;
+      margin: 0 0 24px 0;
+    }
+    .note {
+      font-size: 13px;
+      color: #999999;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .footer {
+      background-color: #f9f9f9;
+      border-top: 1px solid #eeeeee;
+      padding: 24px 40px;
+      text-align: center;
+    }
+    .footer p {
+      font-size: 12px;
+      color: #aaaaaa;
+      margin: 0;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+
+      <!-- Header -->
+      <div class="header">
+        <img src="{{LOGO_URL}}" alt="Showcase" />
+      </div>
+
+      <!-- Reminder banner -->
+      <div class="reminder-banner">
+        ⏰ {{REMINDER_LABEL}}
+      </div>
+
+      <!-- Body -->
+      <div class="body">
+
+        <div class="brain-wrap">
+          <img src="{{BRAIN_URL}}" alt="" />
+        </div>
+
+        <h1>Don't forget your meeting!</h1>
+        <p class="subtitle">Here's a quick reminder about your upcoming meeting.</p>
+
+        <!-- Meeting details card -->
+        <div class="meeting-card">
+          <div class="row">
+            <div class="icon">📋</div>
+            <div>
+              <div class="label">Meeting</div>
+              <div class="value">{{MEETING_TITLE}}</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="icon">📅</div>
+            <div>
+              <div class="label">Date</div>
+              <div class="value">{{DATE}}</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="icon">🕐</div>
+            <div>
+              <div class="label">Time</div>
+              <div class="value">{{TIME_START}} – {{TIME_END}}</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="icon">👤</div>
+            <div>
+              <div class="label">With</div>
+              <div class="value">{{LEAD_NAME}} ({{LEAD_EMAIL}})</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-wrap">
+          <a href="{{CALENDAR_LINK}}" class="cta-btn">View in Calendar →</a>
+        </div>
+
+        <hr class="divider" />
+
+        <p class="note">
+          This is an automated reminder from Showcase.<br/>
+          Please do not reply to this email.
+        </p>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>
+          Showcase AI · Automated Meeting System<br/>
+          <a href="https://theshowcase.ai" style="color:#aaaaaa;">theshowcase.ai</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
