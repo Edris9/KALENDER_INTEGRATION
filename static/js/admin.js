@@ -206,6 +206,8 @@ function adminBookMeeting() {
     })
     .then(r => r.json())
     .then(data => {
+        btn.innerText = 'Confirm Booking'; 
+        btn.disabled = false;
         document.getElementById('admin-booking-form').style.display = 'none';
         const confirmation = document.getElementById('admin-confirmation');
         confirmation.innerHTML = `
@@ -288,7 +290,9 @@ function restoreState() {
             selectClient(hash.client, hash.clientName);
             setTimeout(() => switchTab(hash.tab), 500);
         }
-    } catch (e) {}
+    } catch (e) {
+         window.location.hash = '';
+    }
 }
 
 function toggleSidebar() {
