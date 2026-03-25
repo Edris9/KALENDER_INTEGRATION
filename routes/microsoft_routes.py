@@ -65,20 +65,24 @@ def ms_callback():
             "provider": "microsoft"
         }).execute()
 
-    # Subscription körs ALLTID efter login
-    subscription_body = {
-        "changeType": "updated",
-        "notificationUrl": "https://kalender-integration-1.onrender.com/webhook/microsoft",
-        "resource": "/me/events",
-        "expirationDateTime": (datetime.utcnow() + timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%S.0000000Z"),
-        "clientState": "showcase-secret"
-    }
-    response = req.post(
-        "https://graph.microsoft.com/v1.0/subscriptions",
-        headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
-        json=subscription_body
-    )
-    print(f"MS Subscription response: {response.status_code} - {response.json()}")
+    # Subscription körs i bakgrunden efter 3 sekunder
+    def register_ms_subscription():
+        subscription_body = {
+            "changeType": "updated",
+            "notificationUrl": "https://kalender-integration-1.onrender.com/webhook/microsoft",
+            "resource": "/me/events",
+            "expirationDateTime": (datetime.utcnow() + timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%S.0000000Z"),
+            "clientState": "showcase-secret"
+        }
+        response = req.post(
+            "https://graph.microsoft.com/v1.0/subscriptions",
+            headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+            json=subscription_body
+        )
+        print(f"MS Subscription response: {response.status_code} - {response.json()}")
+
+    import threading
+    threading.Timer(3.0, register_ms_subscription).start()
 
     return redirect("/")
 
