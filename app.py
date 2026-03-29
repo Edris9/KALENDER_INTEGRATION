@@ -12,6 +12,7 @@ from services.google.supabase_client import supabase
 from services.google.email_service import send_reminder_email
 from datetime import datetime, timezone
 import os
+from zoneinfo import ZoneInfo
 
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -45,43 +46,51 @@ def logout():
 
 # ── APScheduler ──────────────────────────────────────────────
 def check_reminders():
-    now = datetime.now(timezone.utc)
+    CET = ZoneInfo("Europe/Stockholm")
+    now = datetime.now(CET)
+    print(f"⏰ check_reminders() kördes — now: {now}")
+    
     bookings = supabase.table("bookings").select("*").in_(
         "status", ["confirmed", "pending"]
     ).execute().data
+    print(f"📋 Hittade {len(bookings)} bokningar")
 
     for b in bookings:
         try:
-            start = datetime.fromisoformat(b["start_time"]).astimezone(timezone.utc)
+            start = datetime.fromisoformat(b["start_time"])
+            if start.tzinfo is None:
+                start = start.replace(tzinfo=CET)
+            
             diff_hours = (start - now).total_seconds() / 3600
+            print(f"🔍 Bokning {b['id'][:8]}... | status: {b['status']} | diff_hours: {diff_hours:.2f} | reminder_1h_sent: {b['reminder_1h_sent']}")
 
-            # 1h påminnelse — endast confirmed
-            if (
-                b["status"] == "confirmed"
-                and not b["reminder_1h_sent"]
-                and 0 < diff_hours <= 1
-            ):
+            if b["status"] == "confirmed" and not b["reminder_1h_sent"] and 0 < diff_hours <= 1:
+                print(f"📧 Skickar 1h påminnelse till {b['lead_email']}")
                 send_reminder_email(b, reminder_type="1h")
-                supabase.table("bookings").update(
-                    {"reminder_1h_sent": True}
-                ).eq("id", b["id"]).execute()
+                supabase.table("bookings").update({"reminder_1h_sent": True}).eq("id", b["id"]).execute()
+                print(f"✅ Skickad!")
 
-            # 24h påminnelse — endast pending
-            elif (
-                b["status"] == "pending"
-                and not b["reminder_24h_sent"]
-                and 0 < diff_hours <= 24
-            ):
-                send_reminder_email(b, reminder_type="24h")
-                supabase.table("bookings").update(
-                    {"reminder_24h_sent": True}
-                ).eq("id", b["id"]).execute()
+            elif b["status"] == "pending" and not b["reminder_24h_sent"]:
+                booked_at = datetime.fromisoformat(b["booked_at"])
+                if booked_at.tzinfo is None:
+                    booked_at = booked_at.replace(tzinfo=CET)
+                hours_since_booking = (now - booked_at).total_seconds() / 3600
+                
+                if hours_since_booking >= 24 and diff_hours > 0:
+                    send_reminder_email(b, reminder_type="24h")
+                    supabase.table("bookings").update({"reminder_24h_sent": True}).eq("id", b["id"]).execute()
 
         except Exception as e:
             print(f"Reminder error for booking {b['id']}: {e}")
 
+@app.route("/test-reminder")
+def test_reminder():
+    check_reminders()
+    return "✅ Kördes — kolla emailen!"
+
+
 scheduler = BackgroundScheduler()
-scheduler.add_job(check_reminders, "interval", minutes=5)
+scheduler.add_job(check_reminders, "interval", minutes=1)
 scheduler.start()
 
 # Registrera routes
