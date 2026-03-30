@@ -62,10 +62,11 @@ KALENDER_INTEGRATION/
 │   │   ├── admin_login.html        # Admin inloggning
 │   │   └── admin.html              # Admin-panelen med sidebar + tabs + hamburger-meny
 │   └── emails/
-│       ├── email_template.html     # Branded HTML email template
-│       ├── reminder_template.html  # Påminnelse email template (24h + 1h)
-│       ├── imag.png                # Brain mascot bild
-│       └── theshowcaseai_logo.jpg  # Showcase logga
+│       ├── email_template.html         # Branded HTML email template (bokningsbekräftelse)
+│       ├── reminder_template.html      # 1h påminnelse — orange/guld design, skickas till lead vid confirmed möte
+│       ├── pending_reminder_template.html  # 24h påminnelse — lila design, skickas till lead vid pending möte
+│       ├── imag.png                    # Brain mascot bild
+│       └── theshowcaseai_logo.jpg      # Showcase logga
 ├── static/
 │   ├── css/
 │   │   ├── styles.css              # Klient frontend
@@ -114,10 +115,19 @@ KALENDER_INTEGRATION/
 4. Supabase uppdateras: `pending` → `confirmed` / `cancelled` / `tentative`
 
 ### Påminnelse-flöde (APScheduler)
-1. APScheduler kör ett jobb var 5:e minut i bakgrunden
-2. Kollar alla bokningar där `status = confirmed` + mötet är om < 1h + `reminder_1h_sent = false` → skickar påminnelse-email + sätter `reminder_1h_sent = true`
-3. Kollar alla bokningar där `status = pending` + mötet är om < 24h + `reminder_24h_sent = false` → skickar påminnelse-email + sätter `reminder_24h_sent = true`
-4. Påminnelser visas i Reminders-taben i admin-panelen
+- APScheduler kör **två separata jobb** var 5:e minut i bakgrunden: `check_1h_reminders()` och `check_24h_reminders()`
+
+**1h påminnelse (`check_1h_reminders`):**
+1. Hämtar alla bokningar med `status = confirmed`
+2. Om mötet är om < 1h + `reminder_1h_sent = false` → skickar `reminder_template.html` till leaden
+3. Sätter `reminder_1h_sent = true` direkt efter
+
+**24h påminnelse (`check_24h_reminders`):**
+1. Hämtar alla bokningar med `status = pending`
+2. Om 24h har gått sedan `booked_at` + mötet har inte passerat + `reminder_24h_sent = false` → skickar `pending_reminder_template.html` till leaden
+3. Sätter `reminder_24h_sent = true` direkt efter
+
+> ⚠️ Båda flaggorna sätts **omedelbart** efter att emailet skickats för att förhindra dubbel-emails.
 
 ## Databas — Supabase
 
@@ -156,15 +166,15 @@ KALENDER_INTEGRATION/
 | lead_name | TEXT | Leadens namn |
 | lead_email | TEXT | Leadens email |
 | meeting_title | TEXT | Mötets titel |
-| start_time | TIMESTAMP | Starttid |
-| end_time | TIMESTAMP | Sluttid |
+| start_time | TIMESTAMP | Starttid (ingen tzinfo — anta CET/UTC+1) |
+| end_time | TIMESTAMP | Sluttid (ingen tzinfo — anta CET/UTC+1) |
 | provider | TEXT | "google" eller "microsoft" |
 | calendar_link | TEXT | Länk till mötet i kalendern |
 | event_id | TEXT | Google/Microsoft event ID (för webhook-matchning) |
 | status | TEXT | pending / confirmed / cancelled / tentative |
-| booked_at | TIMESTAMP | Default: now() |
+| booked_at | TIMESTAMP | Default: now() (ingen tzinfo — anta CET/UTC+1) |
 | is_read | BOOLEAN | Default: false — för notification badge |
-| reminder_24h_sent | BOOLEAN | Default: false — skickas om pending + mötet är om < 24h |
+| reminder_24h_sent | BOOLEAN | Default: false — skickas om pending + 24h sedan bokning |
 | reminder_1h_sent | BOOLEAN | Default: false — skickas om confirmed + mötet är om < 1h |
 
 ## Admin-panel Features
@@ -238,6 +248,8 @@ MS_REDIRECT_URI=https://kalender-integration-1.onrender.com/microsoft/callback
 | /admin/unread-bookings | GET | Antal olästa bokningar |
 | /admin/reminders | GET | API — påminnelsestatus per bokning |
 | /admin/logout | GET | Admin loggar ut |
+| /test-1h-reminder | GET | Testar check_1h_reminders() manuellt (ta bort i produktion) |
+| /test-24h-reminder | GET | Testar check_24h_reminders() manuellt (ta bort i produktion) |
 
 ## Viktiga regler & konventioner
 
@@ -259,17 +271,19 @@ MS_REDIRECT_URI=https://kalender-integration-1.onrender.com/microsoft/callback
 ### Email-flöde
 - Resend skickar branded HTML emails till lead + klient vid bokning
 - Google Calendar skickar separat inbjudan via `sendUpdates="all"`
-- Email template finns i `templates/emails/email_template.html`
-- Påminnelse-template finns i `templates/emails/reminder_template.html`
+- Bokningsbekräftelse: `email_template.html`
+- 1h påminnelse: `reminder_template.html` — orange/guld design, "Your Meeting is in 1 Hour!"
+- 24h pending påminnelse: `pending_reminder_template.html` — lila design, "You have a pending meeting invitation!", knapp "Accept in Calendar →"
 - Bilder laddas via GitHub raw-URL — INTE base64 (blockeras av email-klienter)
 - Kalender-länk är provider-specifik: Google → calendar.google.com, Microsoft → outlook.office.com
-- Knapp-text i email: "View in Calendar →" (generisk, fungerar för alla providers)
+- Påminnelse-emails skickas **endast till leaden** — ingen admin-kopia
 
 ### Påminnelse-logik
-- APScheduler kör var 5:e minut
-- `confirmed` + mötet är om < 1h + `reminder_1h_sent = false` → skicka + sätt true
-- `pending` + mötet är om < 24h + `reminder_24h_sent = false` → skicka + sätt true
-- Flaggorna `reminder_24h_sent` + `reminder_1h_sent` i `bookings` förhindrar dubbel-emails
+- APScheduler kör **två separata funktioner** var 5:e minut: `check_1h_reminders()` + `check_24h_reminders()`
+- `check_1h_reminders()`: `confirmed` + mötet är om < 1h + `reminder_1h_sent = false` → `send_reminder_email(b, reminder_type="1h")`
+- `check_24h_reminders()`: `pending` + 24h sedan `booked_at` + mötet har inte passerat + `reminder_24h_sent = false` → `send_pending_reminder_email(b)`
+- Flaggorna sätts **omedelbart** efter skickad email för att förhindra dubbel-emails
+- Alla tider i Supabase har ingen tzinfo → alltid `replace(tzinfo=CET)` där `CET = ZoneInfo("Europe/Stockholm")`
 
 ### Webhook-konventioner
 - Google watch registreras i `/callback` vid varje klient-inloggning
@@ -284,6 +298,7 @@ MS_REDIRECT_URI=https://kalender-integration-1.onrender.com/microsoft/callback
 - Google: `2026-03-17T09:00:00+01:00`
 - Microsoft: returnerar UTC → lägg till +1h för CET i `ms_calendar_reader.py`
 - `time_utils.py` förväntar sig: `2026-03-17 09:00:00` (mellanslag, med sekunder)
+- Supabase sparar utan tzinfo → använd alltid `datetime.fromisoformat(x).replace(tzinfo=CET)` om `tzinfo is None`
 
 ### Static-filer
 - CSS: `static/css/` — refereras via `url_for('static', filename='css/admin.css')`
@@ -304,6 +319,8 @@ MS_REDIRECT_URI=https://kalender-integration-1.onrender.com/microsoft/callback
 | MS subscription timeout | Använd `threading.Timer(3.0, ...)` för att registrera subscription i bakgrunden |
 | Bokningsknapp fastnar i "Booking..." | Återställ knapp i både `.then()` och `.catch()` i `adminBookMeeting()` |
 | Trasig state vid page refresh | Rensa URL hash i `restoreState()` catch-blocket |
+| Dubbel påminnelse-emails | Dela upp i `check_1h_reminders()` + `check_24h_reminders()`, sätt flagga omedelbart efter skickad email |
+| Fel tidszon i påminnelser | Alltid `replace(tzinfo=CET)` när `tzinfo is None` — aldrig blanda med `timezone.utc` |
 
 ## Projektstatus
 | Fas | Status |
@@ -328,25 +345,21 @@ MS_REDIRECT_URI=https://kalender-integration-1.onrender.com/microsoft/callback
 | State restore vid page refresh (URL hash) | ✅ Klar |
 | Bokningar filtrerade per klient | ✅ Klar |
 | Bokningsknapp bug fixad | ✅ Klar |
+| Fas 3 — Påminnelse-emails (APScheduler) | ✅ Klar |
+| 1h påminnelse (confirmed) | ✅ Klar |
+| 24h påminnelse (pending) | ✅ Klar |
+| reminder_template.html (orange/guld) | ✅ Klar |
+| pending_reminder_template.html (lila) | ✅ Klar |
 | Google App verifiering (publik) | ⏳ Väntar på Aviv |
 | Supabase migration till företagskonto | ⏳ Väntar på Aviv |
 | constants.py | ⏳ Pausad |
 | tests/-mapp | ⏳ Pausad |
-| **Reminders-tab (nästa prioritet)** | 🔜 Nästa steg |
-| Fas 3 — Påminnelse-emails (APScheduler) | 🔜 Nästa steg |
+| Reminders-tab i admin-panelen | 🔜 Nästa steg |
 | Fas 4 — Gmail ton-inlärning | 🔜 Framtid |
 | Avboknings/ombokningsflöde | 🔜 Framtid |
 | No-show tracking | 🔜 Framtid |
 | CRM-export (CSV/Notion/HubSpot) | 🔜 Framtid |
 | Statistik-tab | 🔜 Framtid |
-
-## Nästa steg — Reminders
-Bygga påminnelse-funktionalitet i denna ordning:
-1. **Supabase** — lägg till `reminder_24h_sent` + `reminder_1h_sent` i `bookings`-tabellen
-2. **APScheduler** — bakgrundsjobb i `app.py` som kör var 5:e minut
-3. **Email** — påminnelse-mall (`reminder_template.html`) via Resend
-4. **Frontend** — Reminders-taben i `admin.html` + `admin.js`
-5. **API** — `/admin/reminders` endpoint i `admin_routes.py`
 
 ## Deployment
 - **Hosting:** Render (https://kalender-integration-1.onrender.com)
@@ -355,6 +368,8 @@ Bygga påminnelse-funktionalitet i denna ordning:
 - **GitHub repo:** https://github.com/Edris9/KALENDER_INTEGRATION
 - **Branches:** `main` (production), `dev_frontend` (development)
 - Render deployas automatiskt vid push till `main`
+
+> ⚠️ Ta bort `/test-1h-reminder` och `/test-24h-reminder` routes innan produktion!
 
 ## Teamet
 - **Aviv Farhi** — Grundare/Chef på Showcase

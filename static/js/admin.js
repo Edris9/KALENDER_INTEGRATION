@@ -239,6 +239,12 @@ function switchTab(tabName) {
     });
     const activeTab = document.getElementById(`tab-${tabName}`);
     if (activeTab) activeTab.style.display = 'block';
+
+    // ← Lägg till detta:
+    if (tabName === 'stats') {
+        loadStatistics();
+    }
+
     saveState();
 }
 

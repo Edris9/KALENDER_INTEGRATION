@@ -234,3 +234,62 @@ def get_reminders():
         })
 
     return jsonify({"reminders": reminders})
+
+@admin_bp.route("/admin/statistics/data")
+@admin_required
+def statistics_data():
+    bookings = supabase.table("bookings").select("*").execute().data
+    clients = supabase.table("clients").select("*").execute().data
+
+    # KPIs
+    total = len(bookings)
+    confirmed = len([b for b in bookings if b["status"] == "confirmed"])
+    pending = len([b for b in bookings if b["status"] == "pending"])
+    cancelled = len([b for b in bookings if b["status"] == "cancelled"])
+    tentative = len([b for b in bookings if b["status"] == "tentative"])
+    response_rate = round((confirmed / total * 100), 1) if total > 0 else 0
+
+    # Per klient
+    clients_data = []
+    for c in clients:
+        client_bookings = [b for b in bookings if b["client_id"] == c["id"]]
+        clients_data.append({
+            "name": c["name"] + " (" + c["email"] + ")",
+            "total": len(client_bookings),
+            "confirmed": len([b for b in client_bookings if b["status"] == "confirmed"]),
+            "cancelled": len([b for b in client_bookings if b["status"] == "cancelled"]),
+        })
+
+    # Per månad
+    from collections import defaultdict
+    monthly = defaultdict(int)
+    for b in bookings:
+        month = b["start_time"][:7]  # "2026-03"
+        monthly[month] += 1
+    bookings_per_month = [{"month": k, "count": v} for k, v in sorted(monthly.items())]
+
+    # Populäraste timmar
+    hours = defaultdict(int)
+    for b in bookings:
+        hour = b["start_time"][11:16]  # "09:00"
+        hours[hour] += 1
+    popular_hours = [{"hour": k, "count": v} for k, v in sorted(hours.items())]
+
+    # Svarsfrekvens per klient
+    response_rate_per_client = []
+    for c in clients_data:
+        rate = round((c["confirmed"] / c["total"] * 100), 1) if c["total"] > 0 else 0
+        response_rate_per_client.append({"name": c["name"], "rate": rate})
+
+    return jsonify({
+        "total_bookings": total,
+        "confirmed": confirmed,
+        "pending": pending,
+        "cancelled": cancelled,
+        "tentative": tentative,
+        "response_rate": response_rate,
+        "clients": clients_data,
+        "bookings_per_month": bookings_per_month,
+        "popular_hours": popular_hours,
+        "response_rate_per_client": response_rate_per_client
+    })

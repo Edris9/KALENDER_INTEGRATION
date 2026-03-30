@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Showcase Admin Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/statistics.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -53,7 +55,6 @@
                         <button class="tab-btn" data-tab="history">Meeting History <span id="history-badge" style="display:none; background:#e53935; color:white; border-radius:50%; padding:1px 6px; font-size:11px; margin-left:4px;"></span></button>
                         <button class="tab-btn" data-tab="reminders">Reminders</button>
                         <button class="tab-btn" data-tab="stats">Statistics</button>
-                        <button class="tab-btn" data-tab="cancel">Cancellation</button>
                         <button class="tab-btn" data-tab="reschedule">Reschedule</button>
                         <button class="tab-btn" data-tab="noshow">No-show</button>
                         <button class="tab-btn" data-tab="export">CRM Export</button>
@@ -92,7 +93,6 @@
                 <!-- Reminders Tab -->
                 <div class="tab-content" id="tab-reminders" style="display:none;">
                 <div class="section">
-                    <h2>Reminders</h2>
                     <table class="bookings-table" id="reminders-table">
                         <thead>
                             <tr>
@@ -108,16 +108,41 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+                </div>
 
 
 
                 </div>
                 <div class="tab-content" id="tab-stats" style="display:none;">
-                    <div class="section"><div class="coming-soon">Coming soon</div></div>
-                </div>
-                <div class="tab-content" id="tab-cancel" style="display:none;">
-                    <div class="section"><div class="coming-soon">Coming soon</div></div>
+                    <div class="statistics-container">
+                        <div class="page-header">
+                            <h1>Statistics Dashboard</h1>
+                            <button onclick="loadStatistics()" class="refresh-btn">↻ Refresh</button>
+                        </div>
+                        <div class="kpi-grid" id="kpi-grid"></div>
+                        <div class="charts-grid">
+                            <div class="chart-card">
+                                <h3>Booking Status Distribution</h3>
+                                <div class="chart-wrapper"><canvas id="statusChart"></canvas></div>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Meetings per Client</h3>
+                                <div class="chart-wrapper"><canvas id="clientsChart"></canvas></div>
+                            </div>
+                            <div class="chart-card full-width">
+                                <h3>Bookings Trend (Monthly)</h3>
+                                <div class="chart-wrapper"><canvas id="monthlyChart"></canvas></div>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Response Rate per Client (%)</h3>
+                                <div class="chart-wrapper"><canvas id="responseRateChart"></canvas></div>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Most Popular Booking Hours</h3>
+                                <div class="chart-wrapper"><canvas id="popularHoursChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="tab-content" id="tab-reschedule" style="display:none;">
                     <div class="section"><div class="coming-soon">Coming soon</div></div>
@@ -135,5 +160,6 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/statistics.js') }}"></script>
 </body>
 </html>
